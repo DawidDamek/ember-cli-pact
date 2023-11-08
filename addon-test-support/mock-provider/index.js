@@ -1,10 +1,13 @@
-import { assert } from '@ember/debug';
-import { run } from '@ember/runloop';
-import { getContext } from 'ember-test-helpers';
-import { Promise } from 'rsvp';
+import { assert } from "@ember/debug";
+import { run } from "@ember/runloop";
+import { getContext } from "@ember/test-helpers";
+import { Promise } from "rsvp";
 
-import Interaction from 'ember-cli-pact/-private/interaction';
-import { loadProviderStates, lookupProviderState } from 'ember-cli-pact/-private/provider-states';
+import Interaction from "ember-cli-pact/-private/interaction";
+import {
+  loadProviderStates,
+  lookupProviderState,
+} from "ember-cli-pact/-private/provider-states";
 
 export default class MockProvider {
   constructor(config) {
@@ -35,7 +38,10 @@ export default class MockProvider {
    * @param {string} description
    */
   startInteraction(description) {
-    assert('This provider already has an interaction in progress', !this.interaction);
+    assert(
+      "This provider already has an interaction in progress",
+      !this.interaction
+    );
     this.interaction = new Interaction(description);
   }
 
@@ -69,7 +75,7 @@ export default class MockProvider {
    * @method endInteraction
    */
   endInteraction() {
-    assert('This provider has no in-progress interaction', this.interaction);
+    assert("This provider has no in-progress interaction", this.interaction);
     this.interaction = null;
   }
 
@@ -95,12 +101,14 @@ export default class MockProvider {
    * @param {function} perform the callback to be invoked to capture this interaction
    */
   specifyInteraction(perform) {
-    return Promise.resolve().then(() => {
-      this._capturing = true;
-      return run(() => perform.call(getContext()));
-    }).finally(() => {
-      this._capturing = false;
-    });
+    return Promise.resolve()
+      .then(() => {
+        this._capturing = true;
+        return run(() => perform.call(getContext()));
+      })
+      .finally(() => {
+        this._capturing = false;
+      });
   }
 
   /**

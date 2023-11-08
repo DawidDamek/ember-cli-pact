@@ -1,14 +1,14 @@
 /* global Testem */
 
-import require from 'require';
-import { assert } from '@ember/debug';
-import { getOwner } from '@ember/application';
-import { getContext } from 'ember-test-helpers';
-import { uploadInteraction, finalize } from './upload';
+import require from "require";
+import { assert } from "@ember/debug";
+import { getOwner } from "@ember/application";
+import { getContext } from "@ember/test-helpers";
+import { uploadInteraction, finalize } from "./upload";
 
 export function setupPact(hooks = {}, options = {}) {
   // QUnit passes hooks explicitly; with Mocha they're implicit
-  if (typeof hooks.beforeEach !== 'function') {
+  if (typeof hooks.beforeEach !== "function") {
     options = hooks;
     hooks = makeMochaHooks();
   }
@@ -17,33 +17,33 @@ export function setupPact(hooks = {}, options = {}) {
   // so we stash it in `beforeEach` instead.
   let context;
 
-  hooks.beforeEach(function(assert) {
+  hooks.beforeEach(function (assert) {
     context = getContext();
     setupServices(context, this, options);
     setupProvider(context, options, assert.test.testName);
   });
 
-  hooks.afterEach(function() {
+  hooks.afterEach(function () {
     return teardownProvider(context, options);
   });
 }
 
 function makeMochaHooks() {
-  let mocha = require('mocha');
+  let mocha = require("mocha");
   return {
     afterEach: mocha.afterEach,
     beforeEach(callback) {
-      mocha.beforeEach(function() {
+      mocha.beforeEach(function () {
         // Quick'n'dirty way to pass the test name from Mocha the same as from QUnit
         let assert = { test: { testName: this.currentTest.title } };
         return callback.call(this, assert);
       });
-    }
+    },
   };
 }
 
 function setupServices(context, target, options) {
-  for (let service of getConfigValue(context, options, 'serviceInjections')) {
+  for (let service of getConfigValue(context, options, "serviceInjections")) {
     target[service] = () => findOwner(context).lookup(`service:${service}`);
   }
 }
@@ -52,12 +52,12 @@ function getConfigValue(context, options, key) {
   if (key in options) {
     return options[key];
   } else {
-    return getConfig(context)['ember-cli-pact'][key];
+    return getConfig(context)["ember-cli-pact"][key];
   }
 }
 
 function getConfig(context) {
-  return findOwner(context).resolveRegistration('config:environment');
+  return findOwner(context).resolveRegistration("config:environment");
 }
 
 function findOwner(context) {
@@ -66,7 +66,7 @@ function findOwner(context) {
 
 function setupProvider(context, options, testName) {
   let MockProvider = loadMockProvider(context, options);
-  let provider = context._pactProvider = new MockProvider(getConfig(context));
+  let provider = (context._pactProvider = new MockProvider(getConfig(context)));
 
   assertSingleConsumerName(context, options);
 
@@ -74,11 +74,12 @@ function setupProvider(context, options, testName) {
 }
 
 function loadMockProvider(context, options) {
-  let name = getConfigValue(context, options, 'mockProvider');
+  let name = getConfigValue(context, options, "mockProvider");
   try {
     // Start by looking for a custom provider in the helpers directory
     let { modulePrefix } = getConfig(context);
-    return require(`${modulePrefix}/tests/helpers/pact-providers/${name}`).default;
+    return require(`${modulePrefix}/tests/helpers/pact-providers/${name}`)
+      .default;
   } catch (error) {
     // Fall back to the default provider location from addon-test-support
     return require(`ember-cli-pact/pact-providers/${name}`).default;
@@ -87,18 +88,24 @@ function loadMockProvider(context, options) {
 
 function assertSingleConsumerName(context, options) {
   let localConsumerName = options.consumerName;
-  let globalConsumerName = getConfig(context)['ember-cli-pact'].consumerName;
-  let hasOverriddenConsumer = localConsumerName && localConsumerName !== globalConsumerName;
-  assert(`ember-cli-pact doesn't currently support testing multiple consumers`, !hasOverriddenConsumer);
+  let globalConsumerName = getConfig(context)["ember-cli-pact"].consumerName;
+  let hasOverriddenConsumer =
+    localConsumerName && localConsumerName !== globalConsumerName;
+  assert(
+    `ember-cli-pact doesn't currently support testing multiple consumers`,
+    !hasOverriddenConsumer
+  );
 }
 
 function teardownProvider(context, options) {
   let provider = context._pactProvider;
-  let interaction = provider.serializeInteraction(getConfigValue(context, options, 'pactVersion'));
+  let interaction = provider.serializeInteraction(
+    getConfigValue(context, options, "pactVersion")
+  );
   let upload = uploadInteraction(interaction, {
-    version: getConfigValue(context, options, 'pactVersion'),
-    provider: getConfigValue(context, options, 'providerName'),
-    consumer: getConfigValue(context, options, 'consumerName')
+    version: getConfigValue(context, options, "pactVersion"),
+    provider: getConfigValue(context, options, "providerName"),
+    consumer: getConfigValue(context, options, "consumerName"),
   });
 
   registerFinalizeCallback();
@@ -115,7 +122,11 @@ function registerFinalizeCallback() {
 
     Testem.afterTests((config, data, callback) => {
       finalize()
-        .catch((error) => setTimeout(() => { throw error; }))
+        .catch((error) =>
+          setTimeout(() => {
+            throw error;
+          })
+        )
         .then(() => setTimeout(callback));
     });
   }
